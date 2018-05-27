@@ -1,6 +1,11 @@
 # kos-cli
 CLI for helping with KSP-KOS development
 
+### Build
+```cmd
+go build -v kos.exe cmd\kos\main.go
+```
+
 ### Setup
 
 ```cmd
