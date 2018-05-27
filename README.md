@@ -3,7 +3,7 @@ CLI for helping with KSP-KOS development
 
 ### Build
 ```cmd
-go build -v kos.exe cmd\kos\main.go
+go build -o kos.exe -v cmd\kos\main.go
 ```
 
 ### Setup
