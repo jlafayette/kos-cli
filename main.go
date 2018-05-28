@@ -16,6 +16,7 @@ func main() {
 	}
 
 	deployCommand := flag.NewFlagSet("deploy", flag.ExitOnError)
+	verboseFlag := deployCommand.Bool("v", false, "Display verbose output")
 
 	envCommand := flag.NewFlagSet("env", flag.ExitOnError)
 	// // Setting environment variables doesn't change environment where the script was called from
@@ -33,7 +34,6 @@ func main() {
 		os.Exit(2)
 	}
 	if deployCommand.Parsed() {
-		fmt.Println("Testing kos deploy command...")
 		if os.Getenv("KSPSCRIPT") == "" {
 			fmt.Println("Missing required environment variable: KSPSCRIPT")
 			return
@@ -42,7 +42,7 @@ func main() {
 			fmt.Println("Missing required environment variable: KSPSRC")
 			return
 		}
-		err := deploy(os.Getenv("KSPSRC"), os.Getenv("KSPSCRIPT"))
+		err := deploy(os.Getenv("KSPSRC"), os.Getenv("KSPSCRIPT"), *verboseFlag)
 		if err != nil {
 			fmt.Println(err)
 			return
