@@ -42,6 +42,7 @@ func main() {
 			fmt.Println("Missing required environment variable: KSPSRC")
 			return
 		}
+		deploy(os.Getenv("KSPSRC"), os.Getenv("KSPSCRIPT"))
 	}
 	if envCommand.Parsed() {
 		fmt.Println("KSPSCRIPT:", os.Getenv("KSPSCRIPT"))
