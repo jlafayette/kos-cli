@@ -14,11 +14,12 @@ type copyInstructions struct {
 }
 
 func deploy(kspsrc, kspscript string) error {
-	fmt.Println("running deploy function...")
 	copyInfo := []copyInstructions{
 		{filepath.Join(kspsrc, "library"), kspscript, "*.ks"},
 		{filepath.Join(kspsrc, "missions"), filepath.Join(kspscript, "missions"), "*.ks"},
 		{filepath.Join(kspsrc, "boot"), filepath.Join(kspscript, "boot"), "*.ks"},
+		{filepath.Join(kspsrc, "working", "missions"), filepath.Join(kspscript, "missions"), "*.ks"},
+		{filepath.Join(kspsrc, "working", "boot"), filepath.Join(kspscript, "boot"), "*.ks"},
 	}
 	for _, info := range copyInfo {
 		err := os.MkdirAll(info.dest, os.ModePerm)
@@ -34,15 +35,12 @@ func deploy(kspsrc, kspscript string) error {
 }
 
 func cpFiles(src, dest, match string) error {
-	fmt.Printf("\nCopy .ks files from '%s' to '%s'\n", src, dest)
-	// files, err := ioutil.ReadDir(src)
+	// fmt.Printf("\nCopy .ks files from '%s' to '%s'\n", src, dest)
 	files, err := filepath.Glob(filepath.Join(src, match))
 	if err != nil {
 		return err
 	}
 	for _, f := range files {
-		// fmt.Println(f.Name())
-		// fmt.Println(f)
 		err = cpFile(f, filepath.Join(dest, filepath.Base(f)))
 		if err != nil {
 			return err
