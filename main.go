@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -13,6 +14,7 @@ func main() {
 	if len(os.Args) == 1 {
 		fmt.Println("usage: kos <command> [<args>]")
 		fmt.Println("Commands: ")
+		fmt.Println(" build    Create customized mission from templates")
 		fmt.Println(" deploy   Copy files from development folder to KSP Ships/Script path")
 		fmt.Println(" env      Display environment variables used by kos command")
 		return
@@ -46,15 +48,12 @@ func main() {
 		os.Exit(2)
 	}
 	if deployCommand.Parsed() {
-		if kspscript == "" {
-			fmt.Println("Missing required environment variable: KSPSCRIPT")
+		err := checkEnv()
+		if err != nil {
+			fmt.Println(err)
 			return
 		}
-		if kspsrc == "" {
-			fmt.Println("Missing required environment variable: KSPSRC")
-			return
-		}
-		err := deploy(kspsrc, kspscript, *verboseFlag)
+		err = deploy(kspsrc, kspscript, *verboseFlag)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -65,12 +64,9 @@ func main() {
 		fmt.Println("KSPSRC:", kspsrc)
 	}
 	if buildCommand.Parsed() {
-		if kspscript == "" {
-			fmt.Println("Missing required environment variable: KSPSCRIPT")
-			return
-		}
-		if kspsrc == "" {
-			fmt.Println("Missing required environment variable: KSPSRC")
+		err := checkEnv()
+		if err != nil {
+			fmt.Println(err)
 			return
 		}
 		args := strings.Split(*argsFlag, ",")
@@ -85,4 +81,16 @@ func main() {
 		mission := build.Mission{Filename: *missionFlag, Args: args}
 		build.Test(os.Stdout, kspsrc, &mission)
 	}
+}
+
+func checkEnv() error {
+	kspscript := os.Getenv("KSPSCRIPT")
+	kspsrc := os.Getenv("KSPSRC")
+	if kspscript == "" {
+		return errors.New("Missing required environment variable: KSPSCRIPT")
+	}
+	if kspsrc == "" {
+		return errors.New("Missing required environment variable: KSPSRC")
+	}
+	return nil
 }
