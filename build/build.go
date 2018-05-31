@@ -13,7 +13,8 @@ type Mission struct {
 	Args     []string
 }
 
-func test(w io.Writer, kspsrc string, mission *Mission) {
+// Test boot script template
+func Test(w io.Writer, kspsrc string, mission *Mission) {
 	boot := filepath.Join(kspsrc, "boot", "templates", "simple.ks")
 	tmpl, err := template.ParseFiles(boot)
 	if err != nil {
