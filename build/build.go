@@ -35,7 +35,6 @@ func Test(w io.Writer, kspsrc string, mission *Boot) {
 
 type stage struct {
 	name string
-	path string
 	data interface{}
 }
 
@@ -53,15 +52,13 @@ func MakeMission(w io.Writer, templateDir string) {
 	var stages [2]stage
 	stages[0] = stage{
 		"launchWait.ks",
-		filepath.Join(templateDir, "launchWait.ks"),
 		LaunchWait{"A Ship", 35},
 	}
 	stages[1] = stage{
 		"launch.ks",
-		filepath.Join(templateDir, "launch.ks"),
 		Launch{90, 80000},
 	}
-	tmpl, err := template.ParseFiles(stages[0].path, stages[1].path)
+	tmpl, err := template.ParseGlob(filepath.Join(templateDir, "*.ks"))
 	if err != nil {
 		fmt.Println(err)
 		return
