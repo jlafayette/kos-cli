@@ -2,6 +2,7 @@ package build
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -26,7 +27,7 @@ func TestMakeMission(t *testing.T) {
 		name   string
 		kspsrc string
 	}{
-		{"Test1", "G:\\kerboscripting"},
+		{"Test1", filepath.Join("g:\\kerboscripting", "missions", "templates")},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -7,14 +7,6 @@ import (
 	"path/filepath"
 )
 
-type stage interface {
-	src() string
-}
-
-type mission struct {
-	stages []stage
-}
-
 // // Part interface
 // type part interface {
 // 	write(w io.Writer)
@@ -41,47 +33,45 @@ func Test(w io.Writer, kspsrc string, mission *Boot) {
 	}
 }
 
+type stage struct {
+	name string
+	path string
+	data interface{}
+}
+
 // MakeMission genrates a .ks file for a mission.
-func MakeMission(w io.Writer, kspsrc string) {
-	// wait
-	/* Things needed:
-	src string
-	data struct (different for each)
-	*/
-	waitSrc := filepath.Join(kspsrc, "missions", "templates", "launchWait.ks")
+func MakeMission(w io.Writer, templateDir string) {
 	type LaunchWait struct {
 		TgtVessel string
 		TgtAngle  int
 	}
-	lw := LaunchWait{"A Ship", 35}
-	tmpl, err := template.ParseFiles(waitSrc)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	err = tmpl.Execute(w, lw)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	/* stage launch
-	tgtDir  int or string
-	tgtAlt  int or string
-	*/
-	launchSrc := filepath.Join(kspsrc, "missions", "templates", "launch.ks")
 	type Launch struct {
 		TgtDir int
 		TgtAlt int
 	}
-	l := Launch{90, 80000}
-	tmpl, err = template.ParseFiles(launchSrc)
+
+	var stages [2]stage
+	stages[0] = stage{
+		"launchWait.ks",
+		filepath.Join(templateDir, "launchWait.ks"),
+		LaunchWait{"A Ship", 35},
+	}
+	stages[1] = stage{
+		"launch.ks",
+		filepath.Join(templateDir, "launch.ks"),
+		Launch{90, 80000},
+	}
+	tmpl, err := template.ParseFiles(stages[0].path, stages[1].path)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = tmpl.Execute(w, l)
-	if err != nil {
-		fmt.Println(err)
+	for _, s := range stages {
+		err = tmpl.ExecuteTemplate(w, s.name, s.data)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 	}
 
 	/*
