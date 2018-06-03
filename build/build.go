@@ -7,11 +7,6 @@ import (
 	"path/filepath"
 )
 
-// // Part interface
-// type part interface {
-// 	write(w io.Writer)
-// }
-
 // Boot contains information need to customize boot template .ks files
 type Boot struct {
 	Filename string
@@ -48,15 +43,70 @@ func MakeMission(w io.Writer, templateDir string) {
 		TgtDir int
 		TgtAlt int
 	}
-
-	var stages [2]stage
-	stages[0] = stage{
-		"launchWait.ks",
-		LaunchWait{"A Ship", 35},
+	type InitSpace struct {
+		Antenna string
 	}
-	stages[1] = stage{
-		"launch.ks",
-		Launch{90, 80000},
+	type Circularize struct {
+		TgtDir int
+	}
+	type Intercept struct {
+		ApproachRange int
+	}
+	type Approach struct {
+		TgtVessel    string
+		TgtRange     int
+		OffsetVector string
+		Agility      float64
+	}
+	type WaitForCrew struct {
+		TgtCrew int
+	}
+	type Deorbit struct {
+		LKO          bool
+		TgtPeriapsis int
+	}
+	type ReEntry struct {
+		DragchuteAlt int
+		ParachuteAlt int
+	}
+
+	stages := [9]stage{
+		stage{
+			"launchWait.ks",
+			LaunchWait{"A Ship", 35},
+		},
+		stage{
+			"launch.ks",
+			Launch{90, 80000},
+		},
+		stage{
+			"initSpace.ks",
+			InitSpace{"Communotron 16"},
+		},
+		stage{
+			"circularize.ks",
+			Circularize{90},
+		},
+		stage{
+			"intercept.ks",
+			Intercept{8000},
+		},
+		stage{
+			"approach.ks",
+			Approach{"A Ship", 100, "V(0,0,0)", 1.2},
+		},
+		stage{
+			"waitForCrew.ks",
+			WaitForCrew{1},
+		},
+		stage{
+			"deorbit.ks",
+			Deorbit{true, 30000},
+		},
+		stage{
+			"reentry.ks",
+			ReEntry{2500, 1200},
+		},
 	}
 	tmpl, err := template.ParseGlob(filepath.Join(templateDir, "*.ks"))
 	if err != nil {
@@ -70,40 +120,4 @@ func MakeMission(w io.Writer, templateDir string) {
 			return
 		}
 	}
-
-	/*
-		initSpace
-		circularize
-		intercept
-		approach
-		waitForCrew
-		reentry
-
-		stage initSpace
-			antenna string
-
-		stage circularize
-			tgtDir int or string
-
-		stage intercept (for matching orbit)
-			approachRange int or string
-
-		stage approach
-			tgtVessel    string
-			tgtDistance  int or string
-			offsetVector vector or string
-			agility      float or string
-
-		stage waitForCrew
-			tgtCrew  int or string
-
-		stage deorbit
-			startLoc  (LKO or HKO)  string
-			tgtPeriapsis   int or string
-
-		stage reentry
-			dragAlt
-			parachuteAlt
-
-	*/
 }
