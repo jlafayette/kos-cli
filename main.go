@@ -78,7 +78,7 @@ func main() {
 				args = nil
 			}
 		}
-		mission := build.Mission{Filename: *missionFlag, Args: args}
+		mission := build.Boot{Filename: *missionFlag, Args: args}
 		build.Test(os.Stdout, kspsrc, &mission)
 	}
 }
