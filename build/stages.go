@@ -1,0 +1,78 @@
+package build
+
+import (
+	"fmt"
+)
+
+func Structify(templateName string, args []string) (stage interface{}, err error) {
+	// var lookup map[string]struct{}
+	// lookup["launch.ks"] = LaunchWait
+
+	// stage{"launchWait.ks", LaunchWait{"Jesley's Capsule", 35}},
+	// stage{"launch.ks", Launch{90, 80000}},
+	// stage{"initSpace.ks", InitSpace{"Communotron 16"}},
+	// stage{"circularize.ks", Circularize{90}},
+	// stage{"intercept.ks", Intercept{8000}},
+	// stage{"approach.ks", Approach{"Jesley's Capsule", 100, "V(0,0,0)", 1.2}},
+	// stage{"waitForCrew.ks", WaitForCrew{1}},
+	// stage{"deorbit.ks", Deorbit{true, 30000}},
+	// stage{"reentry.ks", ReEntry{2500, 1200}},
+	switch templateName {
+	case "launchWait.ks":
+		stage = LaunchWait{args[0], args[1]}
+	case "launch.ks":
+		stage = Launch{args[0], args[1]}
+	case "initSpace.ks":
+		stage = InitSpace{args[0]}
+	case "circularize.ks":
+		stage = Circularize{args[0]}
+	case "intercept.ks":
+		stage = Intercept{args[0]}
+	case "approach.ks":
+		stage = Approach{args[0], args[1], args[2], args[3]}
+	case "waitForCrew.ks":
+		stage = WaitForCrew{args[0]}
+	case "deorbit.ks":
+		stage = Deorbit{args[0], args[1]}
+	case "reentry.ks":
+		stage = ReEntry{args[0], args[1]}
+	default:
+		err = fmt.Errorf("No template found with name: %s", templateName)
+	}
+	return stage, err
+}
+
+type LaunchWait struct {
+	TgtVessel string // string
+	TgtAngle  string // int
+}
+type Launch struct {
+	TgtDir string // int 0 - 360
+	TgtAlt string // int
+}
+type InitSpace struct {
+	Antenna string // string
+}
+type Circularize struct {
+	TgtDir string // int 0 - 360
+}
+type Intercept struct {
+	ApproachRange string // int
+}
+type Approach struct {
+	TgtVessel    string // string
+	TgtRange     string // int
+	OffsetVector string // Vector string V(0,0,0)
+	Agility      string //float64
+}
+type WaitForCrew struct {
+	TgtCrew string // int
+}
+type Deorbit struct {
+	LKO          string // bool
+	TgtPeriapsis string // int
+}
+type ReEntry struct {
+	DragchuteAlt string // int
+	ParachuteAlt string // int
+}
