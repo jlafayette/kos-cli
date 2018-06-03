@@ -4,19 +4,8 @@ import (
 	"fmt"
 )
 
+// Structify converts a template name and args into the corresponding struct
 func Structify(templateName string, args []string) (stage interface{}, err error) {
-	// var lookup map[string]struct{}
-	// lookup["launch.ks"] = LaunchWait
-
-	// stage{"launchWait.ks", LaunchWait{"Jesley's Capsule", 35}},
-	// stage{"launch.ks", Launch{90, 80000}},
-	// stage{"initSpace.ks", InitSpace{"Communotron 16"}},
-	// stage{"circularize.ks", Circularize{90}},
-	// stage{"intercept.ks", Intercept{8000}},
-	// stage{"approach.ks", Approach{"Jesley's Capsule", 100, "V(0,0,0)", 1.2}},
-	// stage{"waitForCrew.ks", WaitForCrew{1}},
-	// stage{"deorbit.ks", Deorbit{true, 30000}},
-	// stage{"reentry.ks", ReEntry{2500, 1200}},
 	switch templateName {
 	case "launchWait.ks":
 		stage = LaunchWait{args[0], args[1]}

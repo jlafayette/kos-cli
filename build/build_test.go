@@ -23,6 +23,25 @@ func Test_test(t *testing.T) {
 }
 
 func TestMakeMission(t *testing.T) {
+	i, _ := Structify("launchWait.ks", []string{"Jesley's Capsule", "35"})
+	lw := stage{"launchWait.ks", i}
+	i, _ = Structify("launch.ks", []string{"90", "80000"})
+	l := stage{"launch.ks", i}
+	i, _ = Structify("initSpace.ks", []string{"Communotron 16"})
+	is := stage{"initSpace.ks", i}
+	i, _ = Structify("circularize.ks", []string{"90"})
+	c := stage{"circularize.ks", i}
+	i, _ = Structify("intercept.ks", []string{"8000"})
+	in := stage{"intercept.ks", i}
+	i, _ = Structify("approach.ks", []string{"Jesley's Capsule", "100", "V(0,0,0)", "1.2"})
+	a := stage{"approach.ks", i}
+	i, _ = Structify("waitForCrew.ks", []string{"1"})
+	w := stage{"waitForCrew.ks", i}
+	i, _ = Structify("deorbit.ks", []string{"true", "30000"})
+	d := stage{"deorbit.ks", i}
+	i, _ = Structify("reentry.ks", []string{"2500", "1200"})
+	r := stage{"reentry.ks", i}
+
 	tests := []struct {
 		name   string
 		kspsrc string
@@ -31,17 +50,7 @@ func TestMakeMission(t *testing.T) {
 		{
 			"LKO_rescue",
 			filepath.Join("..", "templates"),
-			[]stage{
-				stage{"launchWait.ks", LaunchWait{"Jesley's Capsule", "35"}},
-				stage{"launch.ks", Launch{"90", "80000"}},
-				stage{"initSpace.ks", InitSpace{"Communotron 16"}},
-				stage{"circularize.ks", Circularize{"90"}},
-				stage{"intercept.ks", Intercept{"8000"}},
-				stage{"approach.ks", Approach{"Jesley's Capsule", "100", "V(0,0,0)", "1.2"}},
-				stage{"waitForCrew.ks", WaitForCrew{"1"}},
-				stage{"deorbit.ks", Deorbit{"true", "30000"}},
-				stage{"reentry.ks", ReEntry{"2500", "1200"}},
-			},
+			[]stage{lw, l, is, c, in, a, w, d, r},
 		},
 	}
 	for _, tt := range tests {
