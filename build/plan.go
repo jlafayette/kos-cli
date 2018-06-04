@@ -19,14 +19,14 @@ func Read(r io.Reader) (Mission, error) {
 		line := scanner.Text()
 		ps := strings.Split(strings.TrimSpace(line), "=")
 		fmt.Printf("line: %q, ps: %q\n", line, ps)
+
+		// len(ps) will never be 0 because the separator is not an empty string
 		switch len(ps) {
-		case 0:
-			continue
 		case 1:
 			if ps[0] == "" {
 				continue
 			}
-			// this means it's a new part, add the current part and initialize a new one
+			// This means it's a new part, add the current part and initialize a new one
 			if p.name != "" {
 				m.parts = append(m.parts, p)
 			}
@@ -45,7 +45,6 @@ func Read(r io.Reader) (Mission, error) {
 		err := fmt.Errorf("no part name found")
 		return m, err
 	}
-
 	return m, nil
 }
 
