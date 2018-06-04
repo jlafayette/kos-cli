@@ -14,34 +14,38 @@ type Boot struct {
 }
 
 // Test boot script template
-func Test(w io.Writer, kspsrc string, mission *Boot) {
+func Test(w io.Writer, kspsrc string, b *Boot) {
 	boot := filepath.Join(kspsrc, "boot", "templates", "simple.ks")
 	tmpl, err := template.ParseFiles(boot)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	err = tmpl.Execute(w, mission)
+	err = tmpl.Execute(w, b)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 }
 
-type stage struct {
+type Mission struct {
+	parts []part
+}
+
+type part struct {
 	name string
-	data interface{}
+	data map[string]string
 }
 
 // MakeMission genrates a .ks file for a mission.
-func MakeMission(w io.Writer, templateDir string, stages []stage) {
+func MakeMission(w io.Writer, templateDir string, m Mission) {
 	tmpl, err := template.ParseGlob(filepath.Join(templateDir, "*.ks"))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	for _, s := range stages {
-		err = tmpl.ExecuteTemplate(w, s.name, s.data)
+	for _, p := range m.parts {
+		err = tmpl.ExecuteTemplate(w, p.name, p.data)
 		if err != nil {
 			fmt.Println(err)
 			return
