@@ -1,0 +1,25 @@
+launchWait.ks
+    TgtVessel     = Jesley's Capsule
+	TgtAngle      = 35
+launch.ks
+	TgtDir        = 90
+	TgtAlt        = 80000
+initSpace.ks
+	Antenna       = Communotron 16
+circularize.ks
+	TgtDir        = 90
+intercept.ks
+	ApproachRange = 8000
+approach.ks
+	TgtVessel     = Jesley's Capsule
+	TgtRange      = 100
+	OffsetVector  = V(0,0,0)
+	Agility       = 1.2
+waitForCrew.ks
+	TgtCrew       = 1
+deorbit.ks
+	LKO           = true
+	TgtPeriapsis  = 30000
+reentry.ks
+	DragchuteAlt  = 2500
+	ParachuteAlt  = 1200
