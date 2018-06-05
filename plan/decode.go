@@ -7,11 +7,6 @@ import (
 	"strings"
 )
 
-// Marshal returns the PLAN encoding of p.
-// func Marshal(p Plan) ([]byte, error) {
-
-// }
-
 // Unmarshal parses the PLAN-encoded data and stores the result in the Plan pointed to by p.
 func Unmarshal(data []byte, p *Plan) error {
 	r := bytes.NewReader(data)
