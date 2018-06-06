@@ -1,22 +1,40 @@
 package build
 
 import (
-	"os"
+	"bytes"
 	"testing"
 )
 
-func Test_test(t *testing.T) {
+func TestBoot(t *testing.T) {
+	type args struct {
+		boot string
+		name string
+	}
 	tests := []struct {
 		name    string
-		kspsrc  string
-		mission *Boot
+		args    args
+		wantW   string
+		wantErr bool
 	}{
-		{"No Args", "g:\\kerboscripting", &Boot{"LKO_rescue.ks", nil}},
-		{"Args", "g:\\kerboscripting", &Boot{"LKO_rescue.ks", []string{"80000", "true"}}},
+		{
+			"Test",
+			args{"testboot.ks", "a"},
+			"Filename = a.ks",
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Test(os.Stdout, tt.kspsrc, tt.mission)
+			w := &bytes.Buffer{}
+			if err := Boot(w, tt.args.boot, tt.args.name); (err != nil) != tt.wantErr {
+				t.Errorf("Boot() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			gotW := w.String()
+			if gotW != tt.wantW {
+				t.Errorf("Boot() = %v, want %v", gotW, tt.wantW)
+			}
+			t.Logf("Boot(): %v", gotW)
 		})
 	}
 }

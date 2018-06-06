@@ -7,6 +7,6 @@ set ship:control:pilotmainthrottle to 0. wait 1.
 if ship:altitude < 500 and ship:obt:body = Kerbin and ship:airspeed < 1 {
     print "Initializing mission sequence...". wait 1.
     copypath("0:/missions/{{.Filename}}", "1:/").
-    runpath("1:/{{.Filename}}"{{if .Args}}{{range .Args}}, {{.}}{{end}}{{end}}).
+    runpath("1:/{{.Filename}}").
     deletepath("1:/{{.Filename}}").
 }

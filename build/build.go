@@ -7,25 +7,21 @@ import (
 	"path/filepath"
 )
 
-// Boot contains information need to customize boot template .ks files
-type Boot struct {
-	Filename string
-	Args     []string
-}
-
-// Test boot script template
-func Test(w io.Writer, kspsrc string, b *Boot) {
-	boot := filepath.Join(kspsrc, "boot", "templates", "simple.ks")
+// Boot will write a customized boot.ks file.
+func Boot(w io.Writer, boot string, name string) error {
 	tmpl, err := template.ParseFiles(boot)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
+	type data struct {
+		Filename string
+	}
+	b := data{name + ".ks"}
 	err = tmpl.Execute(w, b)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
+	return nil
 }
 
 type Mission struct {

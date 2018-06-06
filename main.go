@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"github.com/jlafayette/kos-cli/build"
 	"github.com/jlafayette/kos-cli/deploy"
@@ -21,21 +21,27 @@ func main() {
 		return
 	}
 
+	// Environment variables are the defaults for many flags and displayed by env subcommand.
+	kspscript := os.Getenv("KSPSCRIPT")
+	kspsrc := os.Getenv("KSPSRC")
+	ksptemplate := os.Getenv("KSPTEMPLATE")
+
 	deployCommand := flag.NewFlagSet("deploy", flag.ExitOnError)
 	verboseFlag := deployCommand.Bool("v", false, "Display verbose output")
 
 	envCommand := flag.NewFlagSet("env", flag.ExitOnError)
-	// // Setting environment variables doesn't change environment where the script was called from
-	// // Either figure out how to do this or just have the user set them before running deploy.
-	// setKspScriptFlag := envCommand.String("kspscript", "", "Path to deploy to, usually Ships/Script under KSP install")
-	// setKspSourceFlag := envCommand.String("kspsource", "", "Development root path")
 
+	// kos build [-n|-name] LKO [-o|-out] "output\dir" [-p|-plan] "plan\file" [-t|-template] "templates\dir"
+	// 			 "a_mission"	KSPSCRIPT									  KSPTEMPLATE
 	buildCommand := flag.NewFlagSet("build", flag.ExitOnError)
-	missionFlag := buildCommand.String("mission", "a_mission.ks", "Name of the mission")
-	argsFlag := buildCommand.String("args", "", "Comma separated args for the mission script")
-
-	kspscript := os.Getenv("KSPSCRIPT")
-	kspsrc := os.Getenv("KSPSRC")
+	nameFlag := buildCommand.String("name", "", "Name of the mission")
+	name2Flag := buildCommand.String("n", "a_mission.ks", "Alias for name")
+	outFlag := buildCommand.String("out", "", "Directory to write mission and boot files to")
+	out2Flag := buildCommand.String("o", kspscript, "Alias for out")
+	planFlag := buildCommand.String("plan", "", "PLAN file to build mission from")
+	plan2Flag := buildCommand.String("p", "", "Alias for plan")
+	templateFlag := buildCommand.String("template", "", "Directory containing template files")
+	template2Flag := buildCommand.String("t", ksptemplate, "Alias for template")
 
 	switch os.Args[1] {
 	case "deploy":
@@ -63,24 +69,59 @@ func main() {
 	if envCommand.Parsed() {
 		fmt.Println("KSPSCRIPT:", kspscript)
 		fmt.Println("KSPSRC:", kspsrc)
+		fmt.Println("KSPTEMPLATE:", ksptemplate)
 	}
+
+	// kos build [-n|-name] LKO [-o|-out] "output\dir" [-p|-plan] "plan\file" [-t|-template] "templates\dir"
+	// 			 "a_mission"	KSPSCRIPT									  KSPTEMPLATE
+
+	// Fall through -name --> -n --> -n(default)
 	if buildCommand.Parsed() {
-		err := checkEnv()
+
+		var name string
+		if *nameFlag != "" {
+			name = *nameFlag
+		} else {
+			name = *name2Flag
+		}
+		var out string
+		if *outFlag != "" {
+			out = *outFlag
+		} else {
+			out = *out2Flag
+		}
+		var template string
+		if *templateFlag != "" {
+			template = *templateFlag
+		} else {
+			template = *template2Flag
+		}
+		var plan string
+		if *planFlag != "" {
+			plan = *planFlag
+		} else if *plan2Flag != "" {
+			plan = *plan2Flag
+		} else {
+			fmt.Println("missing required flag: -plan|-p")
+			os.Exit(2)
+			return // is this needed?
+		}
+		fmt.Printf("plan: %v\n", plan)
+
+		// TODO: Validate arg values (paths should exist, name cannot contain quote char)
+
+		bootTemplate := filepath.Join(template, "boot", "simple.ks")
+		bf, err := os.Create(filepath.Join(out, "boot", name+".ks"))
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("Error opening output boot file for writing, %s\n", err)
 			return
 		}
-		args := strings.Split(*argsFlag, ",")
-		if len(args) == 1 {
-			if args[0] == "" {
-				// If only an empty string, convert to nil.
-				// This is because to make the template condition work and not
-				// add add a ', ' to the end.
-				args = nil
-			}
+		defer bf.Close()
+		err = build.Boot(bf, bootTemplate, name)
+		if err != nil {
+			fmt.Printf("Error writing boot file, %s\n", err)
+			return
 		}
-		mission := build.Boot{Filename: *missionFlag, Args: args}
-		build.Test(os.Stdout, kspsrc, &mission)
 	}
 }
 

@@ -10,3 +10,8 @@ type Part struct {
 	name string
 	data map[string]string
 }
+
+// Boot contains information need to customize boot template .ks files
+type Boot struct {
+	Filename string
+}
