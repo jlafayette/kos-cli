@@ -1,4 +1,4 @@
-package main
+package deploy
 
 import (
 	"fmt"
@@ -13,7 +13,8 @@ type copyInstructions struct {
 	match string
 }
 
-func deploy(kspsrc, kspscript string, verbose bool) error {
+// Deploy .ks file from development path to KSP install path
+func Deploy(kspsrc, kspscript string, verbose bool) error {
 	copyInfo := []copyInstructions{
 		{filepath.Join(kspsrc, "library"), kspscript, "*.ks"},
 		{filepath.Join(kspsrc, "missions"), filepath.Join(kspscript, "missions"), "*.ks"},

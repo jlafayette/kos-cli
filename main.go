@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/jlafayette/kos-cli/build"
+	"github.com/jlafayette/kos-cli/deploy"
 )
 
 func main() {
@@ -53,7 +54,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		err = deploy(kspsrc, kspscript, *verboseFlag)
+		err = deploy.Deploy(kspsrc, kspscript, *verboseFlag)
 		if err != nil {
 			fmt.Println(err)
 			return
