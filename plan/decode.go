@@ -26,13 +26,13 @@ func Unmarshal(data []byte, p *Plan) error {
 				continue
 			}
 			// This means it's a new part, add the current part and initialize a new one
-			if part.name != "" {
+			if part.Name != "" {
 				p.Parts = append(p.Parts, part)
 			}
-			part.name = strings.TrimSpace(ps[0])
-			part.data = make(map[string]string)
+			part.Name = strings.TrimSpace(ps[0])
+			part.Data = make(map[string]string)
 		case 2:
-			part.data[strings.TrimSpace(ps[0])] = strings.TrimSpace(ps[1])
+			part.Data[strings.TrimSpace(ps[0])] = strings.TrimSpace(ps[1])
 		default:
 			err := fmt.Errorf("invalid part-line: '%s' too many '=' separators", line)
 			return err
@@ -40,7 +40,7 @@ func Unmarshal(data []byte, p *Plan) error {
 	}
 	p.Parts = append(p.Parts, part)
 	fmt.Printf("%v\n", p)
-	if part.name == "" {
+	if part.Name == "" {
 		err := fmt.Errorf("no part name found")
 		return err
 	}

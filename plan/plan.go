@@ -7,8 +7,8 @@ type Plan struct {
 
 // Part of a mission, like launch or circularize.
 type Part struct {
-	name string
-	data map[string]string
+	Name string
+	Data map[string]string
 }
 
 // Boot contains information need to customize boot template .ks files

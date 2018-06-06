@@ -32,7 +32,7 @@ func main() {
 	envCommand := flag.NewFlagSet("env", flag.ExitOnError)
 
 	// kos build [-n|-name] LKO [-o|-out] "output\dir" [-p|-plan] "plan\file" [-t|-template] "templates\dir"
-	// 			 "a_mission"	KSPSCRIPT									  KSPTEMPLATE
+	//           "a_mission"    KSPSCRIPT                                     KSPTEMPLATE
 	buildCommand := flag.NewFlagSet("build", flag.ExitOnError)
 	nameFlag := buildCommand.String("name", "", "Name of the mission")
 	name2Flag := buildCommand.String("n", "a_mission.ks", "Alias for name")
@@ -71,13 +71,7 @@ func main() {
 		fmt.Println("KSPSRC:", kspsrc)
 		fmt.Println("KSPTEMPLATE:", ksptemplate)
 	}
-
-	// kos build [-n|-name] LKO [-o|-out] "output\dir" [-p|-plan] "plan\file" [-t|-template] "templates\dir"
-	// 			 "a_mission"	KSPSCRIPT									  KSPTEMPLATE
-
-	// Fall through -name --> -n --> -n(default)
 	if buildCommand.Parsed() {
-
 		var name string
 		if *nameFlag != "" {
 			name = *nameFlag
@@ -103,8 +97,7 @@ func main() {
 			plan = *plan2Flag
 		} else {
 			fmt.Println("missing required flag: -plan|-p")
-			os.Exit(2)
-			return // is this needed?
+			return
 		}
 		fmt.Printf("plan: %v\n", plan)
 
@@ -120,6 +113,17 @@ func main() {
 		err = build.Boot(bf, bootTemplate, name)
 		if err != nil {
 			fmt.Printf("Error writing boot file, %s\n", err)
+			return
+		}
+		mf, err := os.Create(filepath.Join(out, "missions", name+".ks"))
+		if err != nil {
+			fmt.Printf("Error opening mission file for writing, %s\n", err)
+			return
+		}
+		defer mf.Close()
+		err = build.Mission(mf, name, template, plan)
+		if err != nil {
+			fmt.Printf("Error building mission file, %s\n", err)
 			return
 		}
 	}
