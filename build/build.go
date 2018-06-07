@@ -9,7 +9,7 @@ import (
 	"github.com/jlafayette/kos-cli/plan"
 )
 
-// Boot will write a customized boot.ks file.
+// Boot writes a customized .ks file.
 func Boot(w io.Writer, boot string, name string) error {
 	tmpl, err := template.ParseFiles(boot)
 	if err != nil {
@@ -26,7 +26,7 @@ func Boot(w io.Writer, boot string, name string) error {
 	return nil
 }
 
-// Mission writes a custom .ks file for a mission.
+// Mission writes a customized .ks file.
 func Mission(w io.Writer, name, templateDir, planFile string) error {
 	tmpl, err := template.ParseGlob(filepath.Join(templateDir, "*.ks"))
 	if err != nil {
@@ -49,19 +49,3 @@ func Mission(w io.Writer, name, templateDir, planFile string) error {
 	}
 	return nil
 }
-
-// // MakeMission genrates a .ks file for a mission.
-// func MakeMission(w io.Writer, templateDir string, m Mission) {
-// 	tmpl, err := template.ParseGlob(filepath.Join(templateDir, "*.ks"))
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	for _, p := range m.parts {
-// 		err = tmpl.ExecuteTemplate(w, p.Name, p.Data)
-// 		if err != nil {
-// 			fmt.Println(err)
-// 			return
-// 		}
-// 	}
-// }

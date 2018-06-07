@@ -96,7 +96,8 @@ func main() {
 		} else if *plan2Flag != "" {
 			plan = *plan2Flag
 		} else {
-			fmt.Println("missing required flag: -plan|-p")
+			fmt.Println("kos build: missing required flag: -p, -plan")
+			fmt.Println("Try 'kos build -help' for more information.")
 			return
 		}
 		fmt.Printf("plan: %v\n", plan)
