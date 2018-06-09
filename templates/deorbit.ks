@@ -9,8 +9,8 @@ copypath("0:/deorbit.ks", "1:/").
 runpath("deorbit.ks").
 deletepath("1:/deorbit.ks").
 {{else}}lock steering to retrograde. wait 10.
-until ship:obt:periapsis < {{.TgtAlt}} {
-    set tval to remap(ship:obt:periapsis, {{.TgtAlt}}, 250000, .05, 1).
+until ship:obt:periapsis < {{.TgtPeriapsis}} {
+    set tval to remap(ship:obt:periapsis, {{.TgtPeriapsis}}, 250000, .05, 1).
     autostage().
     lock throttle to tval.
     wait 0.01.
