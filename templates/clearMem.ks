@@ -1,5 +1,5 @@
 // delete all files from volume 1.
 list files in allfiles.
 for f in allfiles { deletepath("1:/" + f). }
-copypath("{{.Load}}", "1:/").
+{{if .Load}}copypath("{{.Load}}", "1:/").{{end}}
 wait 1. clearscreen.
