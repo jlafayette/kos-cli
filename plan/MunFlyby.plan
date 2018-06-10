@@ -1,0 +1,24 @@
+launch.ks
+	TgtDir = 90
+	TgtAlt = 80000
+initSpace.ks
+	Antenna = Communotron 16
+circularize.ks
+	TgtDir = 90
+kerbinMunTransfer.ks
+    Cutoff = 0
+waitForSOI.ks
+    Body = MUN
+fixCollisionCourse.ks
+    TgtPeriapsis = 10000
+    Body = MUN
+waitForSOI.ks
+    Body = KERBIN
+waitFor.ks
+    OrbPart = apoapsis
+deorbit.ks
+	LKO = 
+	TgtPeriapsis = 35000
+reentry.ks
+	DragchuteAlt = 2500
+	ParachuteAlt = 1200
