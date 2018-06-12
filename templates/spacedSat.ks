@@ -1,16 +1,16 @@
-// No patched conics needed
+{{/*
+.TgtAlt
+.TgtVessel
+.Offset
+*/}}
 
-// Get time to eta:apoapsis so that it goes negative when ship has moved past it.
-function eta_error {
-    local err is eta:apoapsis - ship:obt:period.
-    if eta:apoapsis < ship:obt:period/2 {
-        err is eta:apoapsis.
-    }
-    return err
-}
+copypath("0:/f_remap.ks", "1:/"). runpath("1:/f_remap.ks").
+copypath("0:/f_tgt.ks", "1:/"). runpath("1:/f_tgt.ks").
+copypath("0:/f_eta.ks", "1:/"). runpath("1:/f_eta.ks").
 
 // raise apoapsis to TgtAlt
-lock steering to ship:prograde.
+clearscreen. print "Raising apoapsis to {{.TgtAlt}}".
+lock steering to ship:prograde. wait 3.
 set orig_diff to {{.TgtAlt}} - ship:obt:apoapsis.
 until 0 {
     local diff to {{.TgtAlt}} - ship:obt:apoapsis.
@@ -25,6 +25,7 @@ until 0 {
     }
     autostage().
     lock throttle to tval.
+    print "        diff: " + round(diff,2) at (5, 2).
     wait 0.01.
 }
 unlock steering.
@@ -37,10 +38,37 @@ lock steering to ship:prograde.
 
 {{if .TgtVessel}}
 // Add calculation to space out orbits.
+
+set tl to tgt_ves:longitude. // -180 180
+set sl to ship:longitude.    // -180 180
+
+// At apoapsis, calculate the desired offset to the TgtVessel
+set diff to 360 - tgt_angle(tgt_ves).
+set new_period to tgt_ves:obt:period * (1 - (diff/360)).
+
+// if diff is 0 done.
+// if diff is 360, done.
+// if diff is 
+
+if tgt_angle(tgt_ves) < 180 { // target is in front of ship.
+    set diff to -tgt_angle(tgt_ves).
+} else { // target is behind ship.
+    set diff to 360 - tgt_angle(tgt_ves).
+    set new_period to tgt_ves:obt:period * (1 + (diff/360)).
+}
+    // This needs to be expressed in terms of Kerbin Longitude
+    // Ship:longitude is 0, tgt:longitude is 70, meaning tgt offset is + 70...
+    // Desired offset is 360*{{.Offset}}, for example 90.
+
+// Get the current offset (in Longitude)
+// Get the difference
+// Raise the periapsis so that the orbital period = TgtVessel:obt:period - offset
+// Wait for 1 orbital period
+// Burn prograde until ship:obt:period = TgtVessel:obt:period
+
 {{else}}// If no vessel
 // raise the periapsis to match apoapsis
 clearscreen. print "Raising periapsis".
-
 until eta:apoapsis < 7 {
     print "eta:apoapsis: " + round(eta_error(),2) at (5, 2).
 }
@@ -50,9 +78,8 @@ print "before thrust loop...".
 until 0 {
     local diff to {{.TgtAlt}} - ship:obt:periapsis.
     print "eta:apoapsis: " + round(eta_error(),2) at (5, 2).
-    print "tgt altitude: " + round({{.TgtAlt}},2) at (5, 2).
-    print "        diff: " + round(diff,2) at (5, 2).
-
+    print "tgt altitude: " + round({{.TgtAlt}},2) at (5, 3).
+    print "        diff: " + round(diff,2) at (5, 4).
     if diff < 0 {
         break.
     }
