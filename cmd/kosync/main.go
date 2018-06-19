@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/jlafayette/kos-cli/deploy"
@@ -39,16 +41,26 @@ func main() {
 	src := flag.Args()[0]
 	dst := flag.Args()[1]
 
+	err := sync(src, dst, filter)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+}
+
+func sync(src, dst, filter string) error {
+
 	// Initial sync
 	err := deploy.CopyFiles(src, dst, filter, false)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		os.Exit(2)
+		return err
 	}
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		fmt.Println("ERROR", err)
+		return err
 	}
 	defer watcher.Close()
 
@@ -69,12 +81,10 @@ func main() {
 						}
 						newFile.Close()
 					case 2: // Write --> copy
-						err := deploy.CopyFile(event.Name, replaceFirst(event.Name, src, dst), false)
+						fmt.Printf("time to copy... %v\n", event)
+						err := copyFile(event.Name, replaceFirst(event.Name, src, dst), 500)
 						if err != nil {
 							fmt.Printf("ERROR copying file: %v\n", err)
-							// ToDo: occasionally gets error:
-							// 	     open src/filname.ext: The process cannot access the file
-							// 	     because it is being used by another process.
 						}
 					case 4: // Remove --> remove
 						err := os.Remove(replaceFirst(event.Name, src, dst))
@@ -102,10 +112,12 @@ func main() {
 
 	if err := watcher.Add(src); err != nil {
 		fmt.Println("ERROR", err)
-		os.Exit(2)
+		return err
 	}
 
 	<-done
+
+	return nil
 }
 
 // Same result for this use case and slightly better performance than the
@@ -117,4 +129,51 @@ func replaceFirst(s, old, new string) string {
 	}
 	ind += len(old)
 	return new + s[ind:]
+}
+
+// CopyFile copies the contents of the file named src to the file named by dest.
+// The file will be created if it does not already exist. If the destination
+// file exists, all it's contents will be replaced. This takes a timeout and
+// will try to copy the file until the timeout has expired. If it does not copy
+// the file in that time frame it will return an error.
+func copyFile(src, dest string, timeout int) error {
+	defer fmt.Printf("\n")
+	ch := make(chan os.File, 1)
+
+	go func() {
+		fmt.Printf("start! ")
+		defer close(ch)
+		var f *os.File
+		var e error
+		t := 0
+		for t < timeout {
+			fmt.Printf(" In for loop... t = %v ", t)
+			f, e = os.Open(src)
+			if e != nil {
+				time.Sleep(1 * time.Millisecond)
+				t++
+			} else {
+				ch <- *f
+				fmt.Printf(" break time! ")
+				break
+			}
+		}
+		fmt.Printf(" all done! ")
+	}()
+
+	for infile := range ch {
+		defer infile.Close()
+		fmt.Printf(" Read from ch ")
+		outfile, err := os.Create(dest)
+		if err != nil {
+			return err
+		}
+		defer outfile.Close()
+		_, err = io.Copy(outfile, &infile)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
