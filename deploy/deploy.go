@@ -27,7 +27,7 @@ func Deploy(kspsrc, kspscript string, verbose bool) error {
 		if err != nil {
 			return err
 		}
-		err = cpFiles(info.src, info.dest, info.match, verbose)
+		err = CopyFiles(info.src, info.dest, info.match, verbose)
 		if err != nil {
 			return err
 		}
@@ -35,7 +35,9 @@ func Deploy(kspsrc, kspscript string, verbose bool) error {
 	return nil
 }
 
-func cpFiles(src, dest, match string, verbose bool) error {
+// CopyFiles copies the files matching a pattern string in a source folder to
+// a destination folder.
+func CopyFiles(src, dest, match string, verbose bool) error {
 	if verbose {
 		fmt.Printf("\nCopy .ks files from '%s' to '%s'\n", src, dest)
 	}
@@ -44,7 +46,7 @@ func cpFiles(src, dest, match string, verbose bool) error {
 		return err
 	}
 	for _, f := range files {
-		err = cpFile(f, filepath.Join(dest, filepath.Base(f)), verbose)
+		err = CopyFile(f, filepath.Join(dest, filepath.Base(f)), verbose)
 		if err != nil {
 			return err
 		}
@@ -52,10 +54,10 @@ func cpFiles(src, dest, match string, verbose bool) error {
 	return nil
 }
 
-// cpFile copies the contents of the file named src to the file named by dest.
+// CopyFile copies the contents of the file named src to the file named by dest.
 // The file will be created if it does not already exist. If the destination
 // file exists, all it's contents will be replaced.
-func cpFile(src, dest string, verbose bool) error {
+func CopyFile(src, dest string, verbose bool) error {
 	if verbose {
 		fmt.Printf("Copy %s to %s\n", src, dest)
 	}
