@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -108,7 +107,7 @@ func sync(src, dst, match string) error {
 						}
 						newFile.Close()
 					case 2: // Write --> copy
-						err := copyFile(event.Name, replaceFirst(event.Name, src, dst), 500)
+						err := retryCopyFile(event.Name, replaceFirst(event.Name, src, dst), 10)
 						if err != nil {
 							fmt.Printf("ERROR copying file: %v\n", err)
 						}
@@ -157,40 +156,25 @@ func replaceFirst(s, old, new string) string {
 	return new + s[ind:]
 }
 
-// copyFile is the same as deploy.CopyFile, but it takes a timeout and will
-// try to copy the file until the timeout has expired. If it does not copy
-// the file in that time frame it will return an error.
-func copyFile(src, dest string, timeout int) error {
-	ch := make(chan os.File, 1)
-
-	go func() {
-		defer close(ch)
-		var f *os.File
-		var e error
-		t := 0
-		for t < timeout {
-			f, e = os.Open(src)
-			if e != nil {
-				time.Sleep(1 * time.Millisecond)
-				t++
-			} else {
-				ch <- *f
-				break
-			}
+// retry will retry a function given number of times with a given
+// delay, but doubling the delay after each failed try.
+func retry(tries int, delay time.Duration, fn func() error) error {
+	err := fn()
+	if err != nil {
+		// If there are still more tries then try again
+		if tries--; tries > 0 {
+			time.Sleep(delay)
+			return retry(tries, delay*2, fn)
 		}
-	}()
-
-	for infile := range ch {
-		defer infile.Close()
-		outfile, err := os.Create(dest)
-		if err != nil {
-			return err
-		}
-		defer outfile.Close()
-		_, err = io.Copy(outfile, &infile)
-		if err != nil {
-			return err
-		}
+		// Out of tries
+		return err
 	}
 	return nil
+}
+
+// retryCopyFile retries the CopyFile function for given number of times.
+func retryCopyFile(src, dst string, tries int) error {
+	return retry(tries, time.Millisecond, func() error {
+		return deploy.CopyFile(src, dst, false)
+	})
 }
