@@ -13,13 +13,11 @@ import (
 	"github.com/jlafayette/kos-cli/deploy"
 )
 
-const help = `kosync continuously syncs a source folder to a destination folder.
+const help = `kosync continuously syncs a dev source folder to KSP Ships\Script folder.
 
 Usage: kosync [options]
 
 Options:
-	-f --filter   Glob string for files to be synced. If not specified,
-	              defaults to '*.ks' which matches KerboScript files.
 	-s --source   Development root folder to sync from. If not specified,
 	              defaults to $KSPSRC environment variable.
 	-d --dest     KSP Ships/Script folder to sync to. If not specified,
@@ -27,8 +25,6 @@ Options:
 `
 
 func main() {
-	filterPtr := flag.String("filter", deploy.KsMatch, "Glob string for files to be synced.")
-	fPtr := flag.String("f", "", "(Alias for filter) Glob string for files to be synced.")
 	sourcePtr := flag.String("source", "", "Development root folder to sync from.")
 	sPtr := flag.String("s", os.Getenv("KSPSRC"), "(Alias for source) Development root folder to sync from.")
 	destPtr := flag.String("dest", "", "KSP Ships/Script folder to sync to.")
@@ -36,15 +32,11 @@ func main() {
 	flag.Parse()
 
 	if len(flag.Args()) != 0 {
-		fmt.Printf("args: %v", flag.Args())
+		fmt.Printf("ERROR: Too many arguments: %v\n\n", flag.Args())
 		fmt.Fprintln(os.Stderr, help)
 		os.Exit(2)
 	}
 
-	filter := *filterPtr
-	if *fPtr != "" && filter == deploy.KsMatch {
-		filter = *fPtr
-	}
 	var src string
 	if *sourcePtr != "" {
 		src = *sourcePtr
@@ -65,12 +57,12 @@ func main() {
 		fmt.Fprintln(os.Stderr, help)
 		os.Exit(2)
 	}
-	fmt.Printf("filter: %v\n", filter)
-	fmt.Printf("   src: %v\n", src)
-	fmt.Printf("   dst: %v\n", dst)
+	fmt.Printf("match: %v\n", deploy.KsMatch)
+	fmt.Printf("  src: %v\n", src)
+	fmt.Printf("  dst: %v\n", dst)
 
 	done := make(chan bool)
-	deployInfo := deploy.GetInstructions(src, dst, filter)
+	deployInfo := deploy.GetInstructions(src, dst, deploy.KsMatch)
 	for _, info := range deployInfo {
 		go func(info deploy.CopyInstructions) {
 			err := sync(info.Src, info.Dst, info.Match)
@@ -82,11 +74,11 @@ func main() {
 	<-done
 }
 
-func sync(src, dst, filter string) error {
+func sync(src, dst, match string) error {
 	fmt.Printf("Starting sync %v -> %v\n", src, dst)
 
 	// Initial sync
-	err := deploy.CopyFiles(src, dst, filter, false)
+	err := deploy.CopyFiles(src, dst, match, false)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return err
@@ -106,7 +98,7 @@ func sync(src, dst, filter string) error {
 			select {
 			case event := <-watcher.Events:
 				_, file := filepath.Split(event.Name)
-				m, _ := filepath.Match(filter, file)
+				m, _ := filepath.Match(match, file)
 				if m {
 					switch event.Op {
 					case 1: // Create Op  = 1 << iota
