@@ -15,37 +15,66 @@ import (
 
 const help = `kosync continuously syncs a source folder to a destination folder.
 
-Usage: kosync [options] SOURCE DEST
+Usage: kosync [options]
 
 Options:
-	-f --filter   Glob string for files to be synced.
-	              If not specified, defaults to '*.ks' which matches KerboScript files.
+	-f --filter   Glob string for files to be synced. If not specified,
+	              defaults to '*.ks' which matches KerboScript files.
+	-s --source   Development root folder to sync from. If not specified,
+	              defaults to $KSPSRC environment variable.
+	-d --dest     KSP Ships/Script folder to sync to. If not specified,
+	              defaults to $KSPSCRIPT environment variable.
 `
+const defaultFilter = "*.ks"
 
 func main() {
-	filterPtr := flag.String("filter", "*.ks", "Glob string for files to be synced.")
+	filterPtr := flag.String("filter", defaultFilter, "Glob string for files to be synced.")
 	fPtr := flag.String("f", "", "(Alias for filter) Glob string for files to be synced.")
-
+	sourcePtr := flag.String("source", "", "Development root folder to sync from.")
+	sPtr := flag.String("s", os.Getenv("KSPSRC"), "(Alias for source) Development root folder to sync from.")
+	destPtr := flag.String("dest", "", "KSP Ships/Script folder to sync to.")
+	dPtr := flag.String("d", os.Getenv("KSPSCRIPT"), "(Alias for dest) KSP Ships/Script folder to sync to.")
 	flag.Parse()
 
-	if len(flag.Args()) != 2 {
-		// fmt.Fprintln(os.Stderr, "BAD!")
+	if len(flag.Args()) != 0 {
+		fmt.Printf("args: %v", flag.Args())
 		fmt.Fprintln(os.Stderr, help)
 		os.Exit(2)
 	}
 
 	filter := *filterPtr
-	if *fPtr != "" && filter == "*.ks" {
+	if *fPtr != "" && filter == defaultFilter {
 		filter = *fPtr
 	}
-	src := flag.Args()[0]
-	dst := flag.Args()[1]
-
-	err := sync(src, dst, filter)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	var src string
+	if *sourcePtr != "" {
+		src = *sourcePtr
+	} else if *sPtr != "" {
+		src = *sPtr
+	} else {
+		fmt.Fprintf(os.Stderr, "ERROR: Missing required flag: --source\n\n")
+		fmt.Fprintln(os.Stderr, help)
 		os.Exit(2)
 	}
+	var dst string
+	if *destPtr != "" {
+		dst = *destPtr
+	} else if *dPtr != "" {
+		dst = *dPtr
+	} else {
+		fmt.Fprintf(os.Stderr, "ERROR: Missing required flag: --dest\n\n")
+		fmt.Fprintln(os.Stderr, help)
+		os.Exit(2)
+	}
+	fmt.Printf("filter: %v\n", filter)
+	fmt.Printf("   src: %v\n", src)
+	fmt.Printf("   dst: %v\n", dst)
+
+	// err := sync(src, dst, filter)
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, err)
+	// 	os.Exit(2)
+	// }
 }
 
 func sync(src, dst, filter string) error {
