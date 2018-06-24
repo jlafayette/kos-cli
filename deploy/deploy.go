@@ -7,27 +7,35 @@ import (
 	"path/filepath"
 )
 
-type copyInstructions struct {
-	src   string
-	dest  string
-	match string
+// KsMatch matches .ks files when passed to filepath.Glob.
+const KsMatch = "*.ks"
+
+// CopyInstructions stores info required to copy or sync files for deployment.
+type CopyInstructions struct {
+	Src   string
+	Dst   string
+	Match string
+}
+
+// GetInstructions returns a slice of instructions for deployment based on source and destination root.
+func GetInstructions(src, dst, match string) []CopyInstructions {
+	copyInfo := []CopyInstructions{
+		{filepath.Join(src, "library"), dst, match},
+		{filepath.Join(src, "missions"), filepath.Join(dst, "missions"), match},
+		{filepath.Join(src, "boot"), filepath.Join(dst, "boot"), match},
+	}
+	return copyInfo
 }
 
 // Deploy .ks file from development path to KSP install path
 func Deploy(kspsrc, kspscript string, verbose bool) error {
-	copyInfo := []copyInstructions{
-		{filepath.Join(kspsrc, "library"), kspscript, "*.ks"},
-		{filepath.Join(kspsrc, "missions"), filepath.Join(kspscript, "missions"), "*.ks"},
-		{filepath.Join(kspsrc, "boot"), filepath.Join(kspscript, "boot"), "*.ks"},
-		{filepath.Join(kspsrc, "working", "missions"), filepath.Join(kspscript, "missions"), "*.ks"},
-		{filepath.Join(kspsrc, "working", "boot"), filepath.Join(kspscript, "boot"), "*.ks"},
-	}
+	copyInfo := GetInstructions(kspsrc, kspscript, KsMatch)
 	for _, info := range copyInfo {
-		err := os.MkdirAll(info.dest, os.ModePerm)
+		err := os.MkdirAll(info.Dst, os.ModePerm)
 		if err != nil {
 			return err
 		}
-		err = CopyFiles(info.src, info.dest, info.match, verbose)
+		err = CopyFiles(info.Src, info.Dst, info.Match, verbose)
 		if err != nil {
 			return err
 		}

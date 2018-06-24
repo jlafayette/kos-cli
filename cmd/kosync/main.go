@@ -25,10 +25,9 @@ Options:
 	-d --dest     KSP Ships/Script folder to sync to. If not specified,
 	              defaults to $KSPSCRIPT environment variable.
 `
-const defaultFilter = "*.ks"
 
 func main() {
-	filterPtr := flag.String("filter", defaultFilter, "Glob string for files to be synced.")
+	filterPtr := flag.String("filter", deploy.KsMatch, "Glob string for files to be synced.")
 	fPtr := flag.String("f", "", "(Alias for filter) Glob string for files to be synced.")
 	sourcePtr := flag.String("source", "", "Development root folder to sync from.")
 	sPtr := flag.String("s", os.Getenv("KSPSRC"), "(Alias for source) Development root folder to sync from.")
@@ -43,7 +42,7 @@ func main() {
 	}
 
 	filter := *filterPtr
-	if *fPtr != "" && filter == defaultFilter {
+	if *fPtr != "" && filter == deploy.KsMatch {
 		filter = *fPtr
 	}
 	var src string
@@ -70,14 +69,21 @@ func main() {
 	fmt.Printf("   src: %v\n", src)
 	fmt.Printf("   dst: %v\n", dst)
 
-	// err := sync(src, dst, filter)
-	// if err != nil {
-	// 	fmt.Fprintln(os.Stderr, err)
-	// 	os.Exit(2)
-	// }
+	done := make(chan bool)
+	deployInfo := deploy.GetInstructions(src, dst, filter)
+	for _, info := range deployInfo {
+		go func(info deploy.CopyInstructions) {
+			err := sync(info.Src, info.Dst, info.Match)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			}
+		}(info)
+	}
+	<-done
 }
 
 func sync(src, dst, filter string) error {
+	fmt.Printf("Starting sync %v -> %v\n", src, dst)
 
 	// Initial sync
 	err := deploy.CopyFiles(src, dst, filter, false)
