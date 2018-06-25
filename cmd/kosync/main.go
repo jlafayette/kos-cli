@@ -12,27 +12,39 @@ import (
 	"github.com/jlafayette/kos-cli/deploy"
 )
 
-const help = `kosync continuously syncs a dev source folder to KSP Ships\Script folder.
+// Alternate formatting for options to combine help messages for short
+// and long versions of the flag.
+const options = `OPTIONS:
+	-s, --source
+		Development root folder to sync from. Defaults to the
+		value of the KSPSRC environment variable if that is
+		defined.
 
-Usage: kosync [options]
-
-Options:
-	-s --source   Development root folder to sync from. If not specified,
-	              defaults to $KSPSRC environment variable.
-	-d --dest     KSP Ships/Script folder to sync to. If not specified,
-	              defaults to $KSPSCRIPT environment variable.
+	-d, --dest
+		Folder to sync to. This is normally the Ships/Script
+		subfolder of the KSP install directory. Defaults to
+		value of the KSPSCRIPT environment variable if that
+		is defined.
 `
 
+// Alternate formatting for USAGE and OPTIONS.
+func usage() {
+	fmt.Fprintf(flag.CommandLine.Output(),
+		"USAGE:\n\t%s [options]\n\n", os.Args[0])
+	fmt.Fprintf(flag.CommandLine.Output(), options)
+}
+
 func main() {
+	flag.Usage = usage
 	sourcePtr := flag.String("source", "", "Development root folder to sync from.")
-	sPtr := flag.String("s", os.Getenv("KSPSRC"), "(Alias for source) Development root folder to sync from.")
+	sPtr := flag.String("s", os.Getenv("KSPSRC"), "Alias for source")
 	destPtr := flag.String("dest", "", "KSP Ships/Script folder to sync to.")
-	dPtr := flag.String("d", os.Getenv("KSPSCRIPT"), "(Alias for dest) KSP Ships/Script folder to sync to.")
+	dPtr := flag.String("d", os.Getenv("KSPSCRIPT"), "Alias for dest")
 	flag.Parse()
 
 	if len(flag.Args()) != 0 {
-		fmt.Printf("ERROR: Too many arguments: %v\n\n", flag.Args())
-		fmt.Fprintln(os.Stderr, help)
+		fmt.Printf("ERROR: Wrong number of arguments. Got %v, expected %v\n\n", len(flag.Args()), 0)
+		flag.Usage()
 		os.Exit(2)
 	}
 
@@ -42,8 +54,8 @@ func main() {
 	} else if *sPtr != "" {
 		src = *sPtr
 	} else {
-		fmt.Fprintf(os.Stderr, "ERROR: Missing required flag: --source\n\n")
-		fmt.Fprintln(os.Stderr, help)
+		fmt.Fprintf(os.Stderr, "ERROR: Missing required flag: -s, --source\n\n")
+		flag.Usage()
 		os.Exit(2)
 	}
 	var dst string
@@ -52,13 +64,10 @@ func main() {
 	} else if *dPtr != "" {
 		dst = *dPtr
 	} else {
-		fmt.Fprintf(os.Stderr, "ERROR: Missing required flag: --dest\n\n")
-		fmt.Fprintln(os.Stderr, help)
+		fmt.Fprintf(os.Stderr, "ERROR: Missing required flag: -d, --dest\n\n")
+		flag.Usage()
 		os.Exit(2)
 	}
-	fmt.Printf("match: %v\n", deploy.KsMatch)
-	fmt.Printf("  src: %v\n", src)
-	fmt.Printf("  dst: %v\n", dst)
 
 	done := make(chan bool)
 	deployInfo := deploy.GetInstructions(src, dst, deploy.KsMatch)
@@ -91,7 +100,6 @@ func sync(src, dst, match string) error {
 	defer watcher.Close()
 
 	done := make(chan bool)
-
 	go func() {
 		for {
 			select {
@@ -134,14 +142,11 @@ func sync(src, dst, match string) error {
 			}
 		}
 	}()
-
 	if err := watcher.Add(src); err != nil {
 		fmt.Println("ERROR", err)
 		return err
 	}
-
 	<-done
-
 	return nil
 }
 
